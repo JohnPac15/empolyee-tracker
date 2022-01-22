@@ -1,38 +1,45 @@
 const cTable = require("console.table");
 const inquirer = require("inquirer");
+const { up } = require("inquirer/lib/utils/readline");
 const db = require("./db/connection");
 
 function showDepartments(data) {
   outputArray = [];
   for (let i = 0; i < data.length; i++) {
-    let output = outputArray.push(data[i].id);
+    let output = {
+      name: data[i].name,
+      value: data[i].id,
+    };
+    outputArray.push(output);
   }
- 
+
   return outputArray;
 }
 
 function showRoles(data) {
   outputArray = [];
   for (i = 0; i < data.length; i++) {
-    let output = outputArray.push(data[i].id);
+    let output = {
+      name: data[i].title,
+      value: data[i].id,
+    };
+    outputArray.push(output);
   }
   return outputArray;
 }
 
 function showEmployees(data) {
-  outputArray = []
-  for(i=0;i<data.length;i++){
+  outputArray = [];
+  for (i = 0; i < data.length; i++) {
     let output = {
       name: data[i].first_name,
-      value: data[i].id
-    }
-    outputArray.push(output)
+      value: data[i].id,
+    };
+    outputArray.push(output);
   }
-  console.log(outputArray,'---inloop')
 
   return outputArray;
 }
-
 
 const viewDepartments = function (title) {
   const sql = `SELECT * FROM department`;
@@ -83,7 +90,7 @@ const viewRoles = function (title) {
 
 const addRole = function () {
   const sqlDepartment = `SELECT * FROM department`;
-  console.log(`---SELECT THE DEPARTMENT THIS ROLE BELONGS TOO---`);
+  console.log(`---THE DEPARTMENT---`);
 
   db.query(sqlDepartment, (err, result) => {
     if (err) {
@@ -169,52 +176,97 @@ const addEmployee = function () {
           },
         ])
         .then((data) => {
-          console.log(data);
           const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES(?,?,?,?);`;
-          const params = [
-            data.first_name,
-            data.last_name,
-            data.role,
-          ];
+          const params = [data.first_name, data.last_name, data.role];
 
-          const sqlEmployee =`SELECT employee.id, employee.first_name FROM employee;`;
+          const sqlEmployee = `SELECT employee.id, employee.first_name FROM employee;`;
           console.log(`---EMPLOYEES---`);
 
           db.query(sqlEmployee, (err, result) => {
+            if (err) {
+              throw err;
+            } else {
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "manager",
+                    message: "Who is the manager?",
+                    choices: showEmployees(result),
+                  },
+                ])
+                .then((data) => {
+                  params.push(data.manager);
 
-            if(err){
-              throw err
-            } else{
-              console.table(result,'--in the else')
-              inquirer.prompt([
-                {
-                  type: 'list',
-                  name: 'manager',
-                  message: 'Who is the manager?',
-                  choices: showEmployees(result)
-                }
-              ]).then(data => {
-                params.push(data.manager)
-                console.log(params, '---')
-
-                db.query(sql,params, (err, results) => {
-                  if (err) {
-                    throw err;
-                  } else {
-                    console.table(results)
-                    return viewEmployee()
-                  }
+                  db.query(sql, params, (err, results) => {
+                    if (err) {
+                      throw err;
+                    } else {
+                      console.table(results);
+                      return viewEmployee();
+                    }
+                  });
                 });
-
-              })
-
             }
-          })
-
+          });
         });
     }
   });
 };
+
+const updateEmployee = function() {
+  const sql = `SELECT employee.id, employee.first_name, employee.last_name, roles.title AS role, employee.manager_id AS manager FROM employee JOIN roles ON employee.role_id = roles.id;`;
+  console.log(`---EMPLOYEES---`);
+
+  db.query(sql, (err, result)=> {
+    if(err){
+      throw err
+    } else{
+      console.table(result)
+      inquirer.prompt([
+        {
+          type: 'list',
+          name: 'employee',
+          message: 'Who would you like to update?',
+          choices: showEmployees(result),
+        }
+      ]).then(data => {
+        const employee = data.employee
+
+        const sqlRole = `SELECT roles.id, roles.title FROM roles;`;
+
+        db.query(sqlRole, (err, res) => {
+          if(err){
+            throw err
+          } else{
+            console.table(res)
+            inquirer.prompt([
+              {
+                type: 'list',
+                name: 'role',
+                message: 'Select thier new role',
+                choices: showRoles(res)
+              }
+            ]).then(data => {
+              const updateSQL = `UPDATE employee SET role_id = ${data.role} WHERE id = ${employee}`;
+
+              db.query(updateSQL, (err, results) => {
+                if(err){
+                  throw err
+                } else{
+                  console.table(results)
+                  viewEmployee()
+                }
+              })
+            })
+          }
+        })
+
+
+      })
+    }
+  })
+}
 //   view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
 const init = function () {
   inquirer
@@ -255,6 +307,7 @@ const init = function () {
         addEmployee(data.test);
       }
       if (data.test === "update an employee role") {
+        updateEmployee()
       }
       if (data.test === "STOP") {
         return;
