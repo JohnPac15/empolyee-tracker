@@ -137,7 +137,7 @@ const addRole = function () {
 };
 
 const viewEmployee = function (title) {
-  const sql = `SELECT employee.id, employee.first_name, employee.last_name, roles.title AS role, employee.manager_id AS manager FROM employee JOIN roles ON employee.role_id = roles.id;`;
+  const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
   console.log(`---EMPLOYEES---`);
 
   db.query(sql, (err, results) => {
@@ -215,7 +215,7 @@ const addEmployee = function () {
 };
 
 const updateEmployee = function() {
-  const sql = `SELECT employee.id, employee.first_name, employee.last_name, roles.title AS role, employee.manager_id AS manager FROM employee JOIN roles ON employee.role_id = roles.id;`;
+  const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
   console.log(`---EMPLOYEES---`);
 
   db.query(sql, (err, result)=> {
@@ -316,3 +316,4 @@ const init = function () {
 };
 
 init();
+// `SELECT E.id, E.first_name, E.last_name, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id;`
