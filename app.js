@@ -41,6 +41,18 @@ function showEmployees(data) {
   return outputArray;
 }
 
+function showManager(data) {
+  outputArray = [];
+  for (i = 0; i < data.length; i++) {
+    let output = {
+      name: data[i].manager,
+      value: data[i].id,
+    };
+    outputArray.push(output);
+  }
+  return outputArray;
+}
+
 const viewDepartments = function (title) {
   const sql = `SELECT * FROM department`;
   console.log(`---DEPARTMENTS---`);
@@ -113,7 +125,7 @@ const addRole = function () {
             type: "list",
             name: "department",
             message:
-              "Please reference from list above which department this role belongs too",
+              "Which department this role belongs too",
             choices: showDepartments(result),
           },
         ])
@@ -214,59 +226,117 @@ const addEmployee = function () {
   });
 };
 
-const updateEmployee = function() {
+const updateEmployee = function () {
   const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
   console.log(`---EMPLOYEES---`);
 
-  db.query(sql, (err, result)=> {
-    if(err){
-      throw err
-    } else{
-      console.table(result)
-      inquirer.prompt([
-        {
-          type: 'list',
-          name: 'employee',
-          message: 'Who would you like to update?',
-          choices: showEmployees(result),
-        }
-      ]).then(data => {
-        const employee = data.employee
+  db.query(sql, (err, result) => {
+    if (err) {
+      throw err;
+    } else {
+      console.table(result);
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "employee",
+            message: "Who would you like to update?",
+            choices: showEmployees(result),
+          },
+        ])
+        .then((data) => {
+          const employee = data.employee;
 
-        const sqlRole = `SELECT roles.id, roles.title FROM roles;`;
+          const sqlRole = `SELECT roles.id, roles.title FROM roles;`;
 
-        db.query(sqlRole, (err, res) => {
-          if(err){
-            throw err
-          } else{
-            console.table(res)
-            inquirer.prompt([
-              {
-                type: 'list',
-                name: 'role',
-                message: 'Select thier new role',
-                choices: showRoles(res)
-              }
-            ]).then(data => {
-              const updateSQL = `UPDATE employee SET role_id = ${data.role} WHERE id = ${employee}`;
+          db.query(sqlRole, (err, res) => {
+            if (err) {
+              throw err;
+            } else {
+              console.table(res);
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "role",
+                    message: "Select thier new role",
+                    choices: showRoles(res),
+                  },
+                ])
+                .then((data) => {
+                  const updateSQL = `UPDATE employee SET role_id = ${data.role} WHERE id = ${employee}`;
 
-              db.query(updateSQL, (err, results) => {
-                if(err){
-                  throw err
-                } else{
-                  console.table(results)
-                  viewEmployee()
-                }
-              })
-            })
-          }
-        })
-
-
-      })
+                  db.query(updateSQL, (err, results) => {
+                    if (err) {
+                      throw err;
+                    } else {
+                      console.table(results);
+                      viewEmployee();
+                    }
+                  });
+                });
+            }
+          });
+        });
     }
-  })
-}
+  });
+};
+
+const employeesByManager = function () {
+  const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
+  console.log(`---EMPLOYEES---`);
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      throw err;
+    } else {
+      console.table(result);
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "employee",
+            message: "Who would you like to update?",
+            choices: showEmployees(result),
+          },
+        ])
+        .then((data) => {
+          const employee = data.employee;
+
+          const sqlManager = `SELECT E.id, E.first_name, E.last_name, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id`;
+
+          db.query(sqlManager, (err, res) => {
+            if (err) {
+              throw err;
+            } else {
+              console.table(res);
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    name: "role",
+                    message: "Select thier new manager",
+                    choices: showManager(res),
+                  },
+                ])
+                .then((data) => {
+                  const updateSQL = `UPDATE employee SET manager_id = ${data.role} WHERE id = ${employee}`;
+
+                  db.query(updateSQL, (err, results) => {
+                    if (err) {
+                      throw err;
+                    } else {
+                      console.table(results);
+                      viewEmployee();
+                    }
+                  });
+                });
+            }
+          });
+        });
+    }
+  });
+};
 //   view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
 const init = function () {
   inquirer
@@ -283,6 +353,7 @@ const init = function () {
           "add a role",
           "add an employee",
           "update an employee role",
+          "employee by manager",
           "STOP",
         ],
       },
@@ -307,7 +378,10 @@ const init = function () {
         addEmployee(data.test);
       }
       if (data.test === "update an employee role") {
-        updateEmployee()
+        updateEmployee();
+      }
+      if (data.test === "employee by manager") {
+        employeesByManager();
       }
       if (data.test === "STOP") {
         return;
