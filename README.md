@@ -1,11 +1,15 @@
  # Employee-tracker
  ## Description 
- TDB
+ Employee-tracker is a back-end content management system (CMS). employee-tracker uses Node.js, Inquirer, and MySql. With employee-tracker, you will be able to view all departments, view all roles within those departments, and view each employee with MySQL database tables. You can even change the role of a single employee, and switch managers within the inquirer prompt.
  ## Table of Contents
  * [Installation](#installation)
  * [Usage](#usage)
  * [Credits](#credits)
  * [License](#license)
+ * [Video](#testing)
+ * [ScreenShots](#ScreenShots)
+ * [Contacts](#Questions)
+
  ## Installation
 Run "npm install", login to sql shell, Run source db/db.sql, Run source db/schema.sql,Run source db/seeds.sql. Quit the mysql shell, input you username and password in db/connection. next, run node add.js to get started  
  ## Usage 
@@ -61,7 +65,8 @@ Run "npm install", login to sql shell, Run source db/db.sql, Run source db/schem
  ### 4. Permanent Ban
  **Community Impact**: Demonstrating a pattern of violation of community standards, including sustained inappropriate behavior, harassment of an individual, or aggression toward or disparagement of classes of individuals.
  ## Testing 
-N/A
+ Walkthrough
+ https://watch.screencastify.com/v/4AYYMh5Hkluw17VdkoWC
  ## Questions 
  Made by John Pacini
 

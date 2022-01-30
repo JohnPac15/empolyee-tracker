@@ -3,6 +3,9 @@ const inquirer = require("inquirer");
 const { up } = require("inquirer/lib/utils/readline");
 const db = require("./db/connection");
 
+function EndGame() {
+  return console.log("---Enjoy Your Day!---");
+}
 function showDepartments(data) {
   outputArray = [];
   for (let i = 0; i < data.length; i++) {
@@ -45,7 +48,7 @@ function showManager(data) {
   outputArray = [];
   for (i = 0; i < data.length; i++) {
     let output = {
-      name: data[i].manager,
+      name: data[i].first_name,
       value: data[i].id,
     };
     outputArray.push(output);
@@ -76,14 +79,12 @@ const addDepartment = function (title) {
     .then((data) => {
       const sql = `INSERT INTO department(name) VALUES(?)`;
       const params = data.name;
-      console.log(`---${params}result---`);
 
       db.query(sql, params, (err, result) => {
         if (err) {
           throw err;
         } else {
           viewDepartments();
-          return init();
         }
       });
     });
@@ -102,13 +103,11 @@ const viewRoles = function (title) {
 
 const addRole = function () {
   const sqlDepartment = `SELECT * FROM department`;
-  console.log(`---THE DEPARTMENT---`);
 
   db.query(sqlDepartment, (err, result) => {
     if (err) {
       throw err;
     } else {
-      console.table(result);
       inquirer
         .prompt([
           {
@@ -124,13 +123,11 @@ const addRole = function () {
           {
             type: "list",
             name: "department",
-            message:
-              "Which department this role belongs too",
+            message: "Which department this role belongs too",
             choices: showDepartments(result),
           },
         ])
         .then((data) => {
-          console.log(data, "---");
           const sql = `INSERT INTO roles(title, salary, department_id) VALUES(?,?,?)`;
           const params = [data.title, data.salary, data.department];
 
@@ -139,7 +136,6 @@ const addRole = function () {
               console.log(err);
               throw err;
             } else {
-              console.table(result);
               return viewRoles();
             }
           });
@@ -149,7 +145,7 @@ const addRole = function () {
 };
 
 const viewEmployee = function (title) {
-  const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
+  const sql = `SELECT E.id, E.first_name, E.last_name, roles.title AS role, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
   console.log(`---EMPLOYEES---`);
 
   db.query(sql, (err, results) => {
@@ -161,13 +157,11 @@ const viewEmployee = function (title) {
 
 const addEmployee = function () {
   const sqlROLES = `SELECT roles.id,roles.title,roles.salary, department.name AS Department FROM roles JOIN department ON roles.department_id = department.id;`;
-  console.log(`---ROLES---`);
 
   db.query(sqlROLES, (err, results) => {
     if (err) {
       throw err;
     } else {
-      console.table(results);
       inquirer
         .prompt([
           {
@@ -192,7 +186,6 @@ const addEmployee = function () {
           const params = [data.first_name, data.last_name, data.role];
 
           const sqlEmployee = `SELECT employee.id, employee.first_name FROM employee;`;
-          console.log(`---EMPLOYEES---`);
 
           db.query(sqlEmployee, (err, result) => {
             if (err) {
@@ -214,7 +207,6 @@ const addEmployee = function () {
                     if (err) {
                       throw err;
                     } else {
-                      console.table(results);
                       return viewEmployee();
                     }
                   });
@@ -228,13 +220,11 @@ const addEmployee = function () {
 
 const updateEmployee = function () {
   const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
-  console.log(`---EMPLOYEES---`);
 
   db.query(sql, (err, result) => {
     if (err) {
       throw err;
     } else {
-      console.table(result);
       inquirer
         .prompt([
           {
@@ -253,7 +243,6 @@ const updateEmployee = function () {
             if (err) {
               throw err;
             } else {
-              console.table(res);
               inquirer
                 .prompt([
                   {
@@ -270,7 +259,6 @@ const updateEmployee = function () {
                     if (err) {
                       throw err;
                     } else {
-                      console.table(results);
                       viewEmployee();
                     }
                   });
@@ -284,13 +272,12 @@ const updateEmployee = function () {
 
 const employeesByManager = function () {
   const sql = `SELECT E.id, E.first_name, E.last_name, roles.title, roles.salary, M.first_name AS manager FROM employee E JOIN employee M ON E.manager_id = M.id JOIN roles ON E.role_id = roles.id`;
-  console.log(`---EMPLOYEES---`);
 
   db.query(sql, (err, result) => {
     if (err) {
       throw err;
     } else {
-      console.table(result);
+      
       inquirer
         .prompt([
           {
@@ -309,7 +296,7 @@ const employeesByManager = function () {
             if (err) {
               throw err;
             } else {
-              console.table(res);
+              
               inquirer
                 .prompt([
                   {
@@ -326,7 +313,6 @@ const employeesByManager = function () {
                     if (err) {
                       throw err;
                     } else {
-                      console.table(results);
                       viewEmployee();
                     }
                   });
@@ -353,38 +339,38 @@ const init = function () {
           "add a role",
           "add an employee",
           "update an employee role",
-          "employee by manager",
+          "update employee by manager",
           "STOP",
         ],
       },
     ])
     .then((data) => {
       if (data.test === "view all departments") {
-        viewDepartments(data.test);
+        viewDepartments();
       }
       if (data.test === "view all roles") {
-        viewRoles(data.test);
+        viewRoles();
       }
       if (data.test === "view all employees") {
-        viewEmployee(data.test);
+        viewEmployee();
       }
       if (data.test === "add a department") {
-        addDepartment(data.test);
+        addDepartment();
       }
       if (data.test === "add a role") {
-        addRole(data.test);
+        addRole();
       }
       if (data.test === "add an employee") {
-        addEmployee(data.test);
+        addEmployee();
       }
       if (data.test === "update an employee role") {
         updateEmployee();
       }
-      if (data.test === "employee by manager") {
+      if (data.test === "update employee by manager") {
         employeesByManager();
       }
       if (data.test === "STOP") {
-        return;
+        EndGame();
       }
     });
 };
